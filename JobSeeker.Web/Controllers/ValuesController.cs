@@ -1,8 +1,6 @@
-﻿using System;
+﻿using JobSeeker.Web.Models;
+using JobSeeker.Web.Repo;
 using System.Collections.Generic;
-using System.Linq;
-using System.Net;
-using System.Net.Http;
 using System.Web.Http;
 
 namespace JobSeeker.Web.Controllers
@@ -10,10 +8,16 @@ namespace JobSeeker.Web.Controllers
     [Authorize]
     public class ValuesController : ApiController
     {
-        // GET api/values
-        public IEnumerable<string> Get()
+        public UserRepository Repo { get; }
+
+        public ValuesController()
         {
-            return new string[] { "value1", "value2" };
+            Repo = new UserRepository();
+        }
+        // GET api/values
+        public IEnumerable<ApplicationUser> Get()
+        {
+            return Repo.GetUsers();
         }
 
         // GET api/values/5

@@ -1,6 +1,5 @@
-﻿using System;
+﻿using Newtonsoft.Json;
 using System.ComponentModel.DataAnnotations;
-using Newtonsoft.Json;
 
 namespace JobSeeker.Web.Models
 {
@@ -35,6 +34,8 @@ namespace JobSeeker.Web.Models
     public class RegisterBindingModel
     {
         [Required]
+        public string Username { get; set; }
+        [Required]
         [Display(Name = "Email")]
         public string Email { get; set; }
 
@@ -48,6 +49,12 @@ namespace JobSeeker.Web.Models
         [Display(Name = "Confirm password")]
         [Compare("Password", ErrorMessage = "The password and confirmation password do not match.")]
         public string ConfirmPassword { get; set; }
+
+        public string PhoneNo { get; set; }
+        [Required]
+        public string FirstName { get; set; }
+        [Required]
+        public string LastName { get; set; }
     }
 
     public class RegisterExternalBindingModel

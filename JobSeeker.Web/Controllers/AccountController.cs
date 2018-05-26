@@ -1,21 +1,22 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Net.Http;
-using System.Security.Claims;
-using System.Security.Cryptography;
-using System.Threading.Tasks;
-using System.Web;
-using System.Web.Http;
-using System.Web.Http.ModelBinding;
+﻿using JobSeeker.Web.Messaging;
+using JobSeeker.Web.Models;
+using JobSeeker.Web.Providers;
+using JobSeeker.Web.Results;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.EntityFramework;
 using Microsoft.AspNet.Identity.Owin;
 using Microsoft.Owin.Security;
 using Microsoft.Owin.Security.Cookies;
 using Microsoft.Owin.Security.OAuth;
-using JobSeeker.Web.Models;
-using JobSeeker.Web.Providers;
-using JobSeeker.Web.Results;
+using System;
+using System.Collections.Generic;
+using System.Configuration;
+using System.Net.Http;
+using System.Security.Claims;
+using System.Security.Cryptography;
+using System.Threading.Tasks;
+using System.Web;
+using System.Web.Http;
 
 namespace JobSeeker.Web.Controllers
 {
@@ -125,7 +126,7 @@ namespace JobSeeker.Web.Controllers
 
             IdentityResult result = await UserManager.ChangePasswordAsync(User.Identity.GetUserId(), model.OldPassword,
                 model.NewPassword);
-            
+
             if (!result.Succeeded)
             {
                 return GetErrorResult(result);
@@ -258,9 +259,9 @@ namespace JobSeeker.Web.Controllers
             if (hasRegistered)
             {
                 Authentication.SignOut(DefaultAuthenticationTypes.ExternalCookie);
-                
-                 ClaimsIdentity oAuthIdentity = await user.GenerateUserIdentityAsync(UserManager,
-                    OAuthDefaults.AuthenticationType);
+
+                ClaimsIdentity oAuthIdentity = await user.GenerateUserIdentityAsync(UserManager,
+                   OAuthDefaults.AuthenticationType);
                 ClaimsIdentity cookieIdentity = await user.GenerateUserIdentityAsync(UserManager,
                     CookieAuthenticationDefaults.AuthenticationType);
 
@@ -319,18 +320,45 @@ namespace JobSeeker.Web.Controllers
         }
 
         // POST api/Account/Register
+
         [AllowAnonymous]
         [Route("Register")]
         public async Task<IHttpActionResult> Register(RegisterBindingModel model)
         {
+
+            var userRole = Startup.UserRoleFactory.Invoke();
+            string role = "ADMIN";
+
             if (!ModelState.IsValid)
             {
                 return BadRequest(ModelState);
             }
 
-            var user = new ApplicationUser() { UserName = model.Email, Email = model.Email };
+            var user = new ApplicationUser()
+            {
+                UserName = model.Username,
+                Email = model.Email,
+                PhoneNumber = model.PhoneNo,
+                FullName = model.FirstName + " " + model.LastName
+            };
+
 
             IdentityResult result = await UserManager.CreateAsync(user, model.Password);
+
+            if (result.Succeeded) { await SenMail(model); }
+
+            if (!userRole.RoleExists(role))
+            {
+                var irole = new IdentityRole() { Name = role };
+                userRole.Create<IdentityRole, string>(irole);
+            }
+
+            bool x = await UserManager.IsInRoleAsync(user.Id, role);
+
+            if (!x && model.Email == "admin@gmail.com")
+            {
+                IdentityResult roleResult = await UserManager.AddToRoleAsync(user.Id, role);
+            }
 
             if (!result.Succeeded)
             {
@@ -339,6 +367,32 @@ namespace JobSeeker.Web.Controllers
 
             return Ok();
         }
+
+        private static async Task SenMail(RegisterBindingModel model)
+        {
+            string key = ConfigurationManager.AppSettings["Sendgrid.Key"];
+            EmailService messageSvc = new EmailService(key);
+
+            string htmlBody = $@"<h3>Welcome to Job Seeker Webpage</h3>
+                                    <p>The following are your credentials: keep it safe</p>
+                                 <ul>
+                                <li>Full Name: {model.FirstName} {model.LastName} </li>    
+                                <li>Email: {model.Email}</li>
+                                <li>Phone Number: {model.PhoneNo}</li>
+                                <li>Username: {model.Username}</li>
+                            </ul>";
+
+            EmailMessage msg = new EmailMessage()
+            {
+                Body = htmlBody,
+                Subject = "Registration Deails",
+                From = model.FirstName,
+                Recipient = model.Email
+            };
+
+            await messageSvc.SendMail(msg, true);
+        }
+
 
         // POST api/Account/RegisterExternal
         [OverrideAuthentication]
@@ -368,7 +422,7 @@ namespace JobSeeker.Web.Controllers
             result = await UserManager.AddLoginAsync(user.Id, info.Login);
             if (!result.Succeeded)
             {
-                return GetErrorResult(result); 
+                return GetErrorResult(result);
             }
             return Ok();
         }

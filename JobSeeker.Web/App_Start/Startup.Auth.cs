@@ -1,21 +1,19 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using JobSeeker.Web.Models;
+using JobSeeker.Web.Providers;
 using Microsoft.AspNet.Identity;
 using Microsoft.AspNet.Identity.EntityFramework;
 using Microsoft.Owin;
 using Microsoft.Owin.Security.Cookies;
-using Microsoft.Owin.Security.Google;
 using Microsoft.Owin.Security.OAuth;
 using Owin;
-using JobSeeker.Web.Providers;
-using JobSeeker.Web.Models;
+using System;
 
 namespace JobSeeker.Web
 {
     public partial class Startup
     {
         public static OAuthAuthorizationServerOptions OAuthOptions { get; private set; }
+        public static Func<RoleManager<IdentityRole, string>> UserRoleFactory { get; private set; } = CreateRole;
 
         public static string PublicClientId { get; private set; }
 
@@ -28,7 +26,10 @@ namespace JobSeeker.Web
 
             // Enable the application to use a cookie to store information for the signed in user
             // and to use a cookie to temporarily store information about a user logging in with a third party login provider
-            app.UseCookieAuthentication(new CookieAuthenticationOptions());
+            app.UseCookieAuthentication(new CookieAuthenticationOptions()
+            {
+                LoginPath = new PathString("/Login.html")
+            });
             app.UseExternalSignInCookie(DefaultAuthenticationTypes.ExternalCookie);
 
             // Configure the application for OAuth based flow
@@ -64,6 +65,15 @@ namespace JobSeeker.Web
             //    ClientId = "",
             //    ClientSecret = ""
             //});
+        }
+
+        public static RoleManager<IdentityRole, string> CreateRole()
+        {
+            var dbContext = new ApplicationDbContext();
+            var store = new RoleStore<IdentityRole, string, IdentityUserRole>(dbContext);
+            var rolemanager = new RoleManager<IdentityRole, string>(store);
+
+            return rolemanager;
         }
     }
 }
