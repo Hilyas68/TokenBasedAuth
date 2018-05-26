@@ -11,12 +11,12 @@ namespace JobSeeker.Web.Controllers
             return View();
         }
 
-        [Authorize(Roles = "ADMIN")]
-        public ActionResult Users()
-        {
-            ViewBag.Title = "Home Page";
+        //[Authorize(Roles = "ADMIN")]
+        //public ActionResult Users()
+        //{
+        //    ViewBag.Title = "Home Page";
 
-            return View();
-        }
+        //    return View();
+        //}
     }
 }

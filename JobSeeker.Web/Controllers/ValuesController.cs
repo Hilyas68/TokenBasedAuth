@@ -5,7 +5,7 @@ using System.Web.Http;
 
 namespace JobSeeker.Web.Controllers
 {
-    [Authorize]
+    [Authorize(Roles = "ADMIN")]
     public class ValuesController : ApiController
     {
         public UserRepository Repo { get; }
