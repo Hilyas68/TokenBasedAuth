@@ -8,12 +8,42 @@
 <body style="padding-top: 45px">
 
     <div class="container">
+        <div id="usrdiv" class="pull-left">Signed in as <span id="username"></span> </div>
+        <input type="button" id="bnLogout" value="Logout" class="btn btn-success" />
         <div class="jumbotron">
             <h1>Welcome to Job Seeker WebPage</h1>
             <p class="lead">You will get your latest job post here....</p>
             <p><a href="#" class="btn btn-primary btn-lg">Learn more &raquo;</a></p>
         </div>
     </div>
+    <script src="Scripts/jquery-1.10.2.min.js"></script>
+    <script src="Scripts/bootstrap.min.js"></script>
+    <script type="text/javascript">
 
+        $(document).ready(
+            function () {
+                $('#usrdiv').hide();
+                var userName = localStorage.getItem('userName');
+
+                if (localStorage.getItem('access_token') == null) {
+                    window.location.href = "login.html";
+                }
+
+                if (userName != null) {
+                    $('#username').text(userName);
+                    $('#usrdiv').show('fade');
+
+                }
+
+
+                $('#bnLogout').click(function () {
+
+                    localStorage.removeItem('access_token');
+                    localStorage.removeItem('userName');
+                    window.location.href = "/Login.html";
+                });
+            });
+
+    </script>
 </body>
 </html>
